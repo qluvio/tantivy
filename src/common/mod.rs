@@ -10,13 +10,14 @@ pub(crate) use self::bitset::TinySet;
 pub(crate) use self::composite_file::{CompositeFile, CompositeWrite};
 pub use self::counting_writer::CountingWriter;
 pub use self::serialize::{BinarySerializable, FixedSize};
-pub use self::vint::{read_u32_vint, serialize_vint_u32, write_u32_vint, VInt};
+pub use self::vint::{read_u32_vint_no_advance, read_u32_vint, serialize_vint_u32, write_u32_vint, VInt};
 pub use byteorder::LittleEndian as Endianness;
 
 /// Segment's max doc must be `< MAX_DOC_LIMIT`.
 ///
 /// We do not allow segments with more than
 pub const MAX_DOC_LIMIT: u32 = 1 << 31;
+
 
 pub fn minmax<I, T>(mut vals: I) -> Option<(T, T)>
 where

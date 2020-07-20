@@ -3,11 +3,14 @@ use crate::query::Explanation;
 use crate::Score;
 use crate::Searcher;
 use crate::Term;
+use serde::Deserialize;
+use serde::Serialize;
 
 const K1: f32 = 1.2;
 const B: f32 = 0.75;
 
 fn idf(doc_freq: u64, doc_count: u64) -> f32 {
+    assert!(doc_count >= doc_freq, "{} >= {}", doc_count, doc_freq);
     let x = ((doc_count - doc_freq) as f32 + 0.5) / (doc_freq as f32 + 0.5);
     (1f32 + x).ln()
 }
@@ -23,6 +26,12 @@ fn compute_tf_cache(average_fieldnorm: f32) -> [f32; 256] {
         *cache_mut = cached_tf_component(fieldnorm, average_fieldnorm);
     }
     cache
+}
+
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
+pub struct BM25Params {
+    pub idf: f32,
+    pub avg_fieldnorm: f32,
 }
 
 pub struct BM25Weight {
@@ -62,17 +71,9 @@ impl BM25Weight {
         }
         let average_fieldnorm = total_num_tokens as f32 / total_num_docs as f32;
 
-        let mut idf_explain: Explanation;
         if terms.len() == 1 {
             let term_doc_freq = searcher.doc_freq(&terms[0]);
-            let idf = idf(term_doc_freq, total_num_docs);
-            idf_explain =
-                Explanation::new("idf, computed as log(1 + (N - n + 0.5) / (n + 0.5))", idf);
-            idf_explain.add_const(
-                "n, number of docs containing this term",
-                term_doc_freq as f32,
-            );
-            idf_explain.add_const("N, total number of docs", total_num_docs as f32);
+            BM25Weight::for_one_term(term_doc_freq, total_num_docs, average_fieldnorm)
         } else {
             let idf = terms
                 .iter()
@@ -81,9 +82,21 @@ impl BM25Weight {
                     idf(term_doc_freq, total_num_docs)
                 })
                 .sum::<f32>();
-            idf_explain = Explanation::new("idf", idf);
+            let idf_explain = Explanation::new("idf", idf);
+            BM25Weight::new(idf_explain, average_fieldnorm)
         }
-        BM25Weight::new(idf_explain, average_fieldnorm)
+    }
+
+    pub fn for_one_term(term_doc_freq: u64, total_num_docs: u64, avg_fieldnorm: f32) -> BM25Weight {
+        let idf = idf(term_doc_freq, total_num_docs);
+        let mut idf_explain =
+            Explanation::new("idf, computed as log(1 + (N - n + 0.5) / (n + 0.5))", idf);
+        idf_explain.add_const(
+            "n, number of docs containing this term",
+            term_doc_freq as f32,
+        );
+        idf_explain.add_const("N, total number of docs", total_num_docs as f32);
+        BM25Weight::new(idf_explain, avg_fieldnorm)
     }
 
     fn new(idf_explain: Explanation, average_fieldnorm: f32) -> BM25Weight {
@@ -98,15 +111,23 @@ impl BM25Weight {
 
     #[inline(always)]
     pub fn score(&self, fieldnorm_id: u8, term_freq: u32) -> Score {
-        let norm = self.cache[fieldnorm_id as usize];
+        self.weight * self.tf_factor(fieldnorm_id, term_freq)
+    }
+
+    pub fn max_score(&self) -> Score {
+        self.score(255u8, 2_013_265_944)
+    }
+
+    #[inline(always)]
+    pub(crate) fn tf_factor(&self, fieldnorm_id: u8, term_freq: u32) -> f32 {
         let term_freq = term_freq as f32;
-        self.weight * term_freq / (term_freq + norm)
+        let norm = self.cache[fieldnorm_id as usize];
+        term_freq / (term_freq + norm)
     }
 
     pub fn explain(&self, fieldnorm_id: u8, term_freq: u32) -> Explanation {
         // The explain format is directly copied from Lucene's.
         // (So, Kudos to Lucene)
-
         let score = self.score(fieldnorm_id, term_freq);
 
         let norm = self.cache[fieldnorm_id as usize];
@@ -143,6 +164,6 @@ mod tests {
 
     #[test]
     fn test_idf() {
-        assert_nearly_equals!(idf(1, 2), 0.6931472);
+        assert_nearly_equals!(idf(1, 2), std::f32::consts::LN_2);
     }
 }

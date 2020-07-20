@@ -1,6 +1,8 @@
+mod block_wand;
 mod boolean_query;
 mod boolean_weight;
 
+pub(crate) use self::block_wand::block_wand;
 pub use self::boolean_query::BooleanQuery;
 
 #[cfg(test)]

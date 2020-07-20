@@ -52,8 +52,8 @@ use std::fmt;
 /// let query = query_parser.parse_query("diary").unwrap();
 /// let top_docs = searcher.search(&query, &TopDocs::with_limit(2)).unwrap();
 ///
-/// assert_eq!(&top_docs[0], &(0.7261542, DocAddress(0, 1)));
-/// assert_eq!(&top_docs[1], &(0.6099695, DocAddress(0, 3)));
+/// assert_eq!(top_docs[0].1, DocAddress(0, 1));
+/// assert_eq!(top_docs[1].1, DocAddress(0, 3));
 /// ```
 pub struct TopDocs(TopCollector<Score>);
 
@@ -139,8 +139,8 @@ impl TopDocs {
     /// let top_docs = searcher.search(&query, &TopDocs::with_limit(2).and_offset(1)).unwrap();
     ///
     /// assert_eq!(top_docs.len(), 2);
-    /// assert_eq!(&top_docs[0], &(0.5204813, DocAddress(0, 4)));
-    /// assert_eq!(&top_docs[1], &(0.4793185, DocAddress(0, 3)));
+    /// assert_eq!(top_docs[0].1, DocAddress(0, 4));
+    /// assert_eq!(top_docs[1].1, DocAddress(0, 3));
     /// ```
     pub fn and_offset(self, offset: usize) -> TopDocs {
         TopDocs(self.0.and_offset(offset))
