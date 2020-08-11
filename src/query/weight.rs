@@ -2,6 +2,7 @@ use super::Scorer;
 use crate::core::SegmentReader;
 use crate::query::Explanation;
 use crate::{DocId, Result};
+use std::ops::Deref;
 
 /// A Weight is the specialization of a Query
 /// for a given set of segments.
@@ -23,5 +24,17 @@ pub trait Weight: Send + Sync + 'static {
         } else {
             Ok(scorer.count_including_deleted())
         }
+    }
+}
+
+impl Weight for Box<dyn Weight> {
+    fn scorer(&self, reader: &SegmentReader) -> Result<Box<dyn Scorer>> {
+        self.deref().scorer(reader)
+    }
+    fn explain(&self, reader: &SegmentReader, doc: DocId) -> Result<Explanation> {
+        self.deref().explain(reader, doc)
+    }
+    fn count(&self, reader: &SegmentReader) -> Result<u32> {
+        self.deref().count(reader)
     }
 }

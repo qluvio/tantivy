@@ -22,6 +22,7 @@ mod scorer;
 mod term_query;
 mod union;
 mod weight;
+mod weighted_query;
 
 #[cfg(test)]
 mod vec_docset;
@@ -53,6 +54,7 @@ pub use self::scorer::ConstScorer;
 pub use self::scorer::Scorer;
 pub use self::term_query::TermQuery;
 pub use self::weight::Weight;
+pub use self::weighted_query::WeightedQuery;
 pub use tantivy_query_grammar::Occur;
 
 #[cfg(test)]
