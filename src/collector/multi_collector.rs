@@ -53,7 +53,7 @@ impl<TCollector: Collector> Collector for CollectorWrapper<TCollector> {
 impl SegmentCollector for Box<dyn BoxableSegmentCollector> {
     type Fruit = Box<dyn Fruit>;
 
-    fn collect(&mut self, doc: u32, score: f32) {
+    fn collect(&mut self, doc: u32, score: Score) {
         self.as_mut().collect(doc, score);
     }
 
@@ -63,7 +63,7 @@ impl SegmentCollector for Box<dyn BoxableSegmentCollector> {
 }
 
 pub trait BoxableSegmentCollector {
-    fn collect(&mut self, doc: u32, score: f32);
+    fn collect(&mut self, doc: u32, score: Score);
     fn harvest_from_box(self: Box<Self>) -> Box<dyn Fruit>;
 }
 
@@ -72,7 +72,7 @@ pub struct SegmentCollectorWrapper<TSegmentCollector: SegmentCollector>(TSegment
 impl<TSegmentCollector: SegmentCollector> BoxableSegmentCollector
     for SegmentCollectorWrapper<TSegmentCollector>
 {
-    fn collect(&mut self, doc: u32, score: f32) {
+    fn collect(&mut self, doc: u32, score: Score) {
         self.0.collect(doc, score);
     }
 

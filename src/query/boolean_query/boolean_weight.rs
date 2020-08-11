@@ -139,7 +139,7 @@ impl Weight for BooleanWeight {
             return Ok(Explanation::new("BooleanQuery with no scoring", 1f32));
         }
 
-        let mut explanation = Explanation::new("BooleanClause. Sum of ...", scorer.score());
+        let mut explanation = Explanation::new("BooleanClause. Sum of ...", scorer.score().1);
         for &(ref occur, ref subweight) in &self.weights {
             if is_positive_occur(*occur) {
                 if let Ok(child_explanation) = subweight.explain(reader, doc) {

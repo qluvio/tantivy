@@ -52,7 +52,7 @@ impl<TDocSet: DocSet> ConstScorer<TDocSet> {
     pub fn new(docset: TDocSet) -> ConstScorer<TDocSet> {
         ConstScorer {
             docset,
-            score: 1f32,
+            score: Score::new(1f32),
         }
     }
 
@@ -90,6 +90,6 @@ impl<TDocSet: DocSet> DocSet for ConstScorer<TDocSet> {
 
 impl<TDocSet: DocSet + 'static> Scorer for ConstScorer<TDocSet> {
     fn score(&mut self) -> Score {
-        1f32
+        Score::new(1f32)
     }
 }

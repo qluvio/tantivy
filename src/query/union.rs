@@ -64,7 +64,7 @@ where
             cursor: HORIZON_NUM_TINYBITSETS,
             offset: 0,
             doc: 0,
-            score: 0f32,
+            score: Score::new(0f32),
         }
     }
 }

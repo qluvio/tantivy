@@ -169,7 +169,11 @@ pub use crate::indexer::IndexWriter;
 pub use crate::postings::Postings;
 pub use crate::reader::LeasedItem;
 pub use crate::schema::{Document, Term};
+use std::cmp;
+use std::default;
 use std::fmt;
+use std::iter;
+use std::ops;
 
 use once_cell::sync::Lazy;
 
@@ -246,12 +250,60 @@ pub type DocId = u32;
 /// with opstamp `n+1`.
 pub type Opstamp = u64;
 
-/// A f32 that represents the relevance of the document to the query
+/// A (u32, f32) that represents the relevance of the document to the query
 ///
-/// This is modelled internally as a `f32`. The
-/// larger the number, the more relevant the document
+/// This is modelled internally as a `(u32, f32)`.
+/// The first element (`u32`) being the rank space.
+/// The second element (`f32`) being the score space.
+/// The larger the score, the more relevant the document
 /// to the search
-pub type Score = f32;
+#[derive(Debug, Default, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
+pub struct Score(pub u32, pub f32);
+
+impl Score {
+    fn new<E: Into<Score>>(el: E) -> Score {
+        el.into()
+    }
+}
+
+impl From<f32> for Score {
+    fn from(score: f32) -> Score {
+        Score(0, score)
+    }
+}
+
+impl From<(u32, f32)> for Score {
+    fn from(score: (u32, f32)) -> Score {
+        Score(score.0, score.1)
+    }
+}
+
+impl ops::Add<Score> for Score {
+    type Output = Score;
+
+    fn add(self, rhs: Score) -> Score {
+        Score(cmp::max(self.0, rhs.0), self.1 + rhs.1)
+    }
+}
+
+impl ops::AddAssign for Score {
+    fn add_assign(&mut self, other: Self) {
+        self.0 = cmp::max(self.0, other.0);
+        self.1 += other.1;
+    }
+}
+
+impl iter::Sum for Score {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(default::Default::default(), ops::Add::add)
+    }
+}
+
+impl fmt::Display for Score {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {})", self.0, self.1)
+    }
+}
 
 /// A `SegmentLocalId` identifies a segment.
 /// It only makes sense for a given searcher.

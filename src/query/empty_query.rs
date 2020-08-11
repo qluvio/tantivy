@@ -63,7 +63,7 @@ impl DocSet for EmptyScorer {
 
 impl Scorer for EmptyScorer {
     fn score(&mut self) -> Score {
-        0f32
+        Score::new(0f32)
     }
 }
 

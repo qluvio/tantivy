@@ -92,7 +92,7 @@ impl BM25Weight {
     pub fn score(&self, fieldnorm_id: u8, term_freq: u32) -> Score {
         let norm = self.cache[fieldnorm_id as usize];
         let term_freq = term_freq as f32;
-        self.weight * term_freq / (term_freq + norm)
+        Score::new(self.weight * term_freq / (term_freq + norm))
     }
 
     pub fn explain(&self, fieldnorm_id: u8, term_freq: u32) -> Explanation {
@@ -119,7 +119,7 @@ impl BM25Weight {
         );
         tf_explanation.add_const("avgdl, average length of field", self.average_fieldnorm);
 
-        let mut explanation = Explanation::new("TermQuery, product of...", score);
+        let mut explanation = Explanation::new("TermQuery, product of...", score.1);
         explanation.add_detail(Explanation::new("(K1+1)", K1 + 1f32));
         explanation.add_detail(self.idf_explain.clone());
         explanation.add_detail(tf_explanation);

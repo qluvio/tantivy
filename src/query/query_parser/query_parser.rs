@@ -8,10 +8,12 @@ use crate::query::PhraseQuery;
 use crate::query::Query;
 use crate::query::RangeQuery;
 use crate::query::TermQuery;
+use crate::query::WeightedQuery;
 use crate::schema::IndexRecordOption;
 use crate::schema::{Field, Schema};
 use crate::schema::{FieldType, Term};
 use crate::tokenizer::TokenizerManager;
+use crate::Score;
 use std::borrow::Cow;
 use std::num::{ParseFloatError, ParseIntError};
 use std::ops::Bound;
@@ -484,7 +486,10 @@ impl QueryParser {
 
 fn convert_literal_to_query(logical_literal: LogicalLiteral) -> Box<dyn Query> {
     match logical_literal {
-        LogicalLiteral::Term(term) => Box::new(TermQuery::new(term, IndexRecordOption::WithFreqs)),
+        LogicalLiteral::Term(term) => Box::new(WeightedQuery::new(
+            TermQuery::new(term, IndexRecordOption::WithFreqs),
+            Score::new((0, 0.)),
+        )),
         LogicalLiteral::Phrase(term_with_offsets) => {
             Box::new(PhraseQuery::new_with_offset(term_with_offsets))
         }

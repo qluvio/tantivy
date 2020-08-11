@@ -85,7 +85,7 @@ impl DocSet for AllScorer {
 
 impl Scorer for AllScorer {
     fn score(&mut self) -> Score {
-        1f32
+        Score::from(1f32)
     }
 }
 

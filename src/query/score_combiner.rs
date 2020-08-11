@@ -31,7 +31,7 @@ impl ScoreCombiner for DoNothingCombiner {
     fn clear(&mut self) {}
 
     fn score(&self) -> Score {
-        1f32
+        Score::new(1f32)
     }
 }
 
@@ -47,7 +47,7 @@ impl ScoreCombiner for SumCombiner {
     }
 
     fn clear(&mut self) {
-        self.score = 0f32;
+        self.score = Score::new(0f32);
     }
 
     fn score(&self) -> Score {
@@ -70,7 +70,7 @@ impl ScoreCombiner for SumWithCoordsCombiner {
     }
 
     fn clear(&mut self) {
-        self.score = 0f32;
+        self.score = Score::new(0f32);
         self.num_fields = 0;
     }
 
