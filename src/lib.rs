@@ -250,15 +250,18 @@ pub type DocId = u32;
 /// with opstamp `n+1`.
 pub type Opstamp = u64;
 
-/// A (u32, f32) that represents the relevance of the document to the query
+/// A `u32` that represent the rank associated with a query literal
+pub type Rank = u32;
+
+/// A `(Rank, f32)` that represents the relevance of the document to the query
 ///
-/// This is modelled internally as a `(u32, f32)`.
-/// The first element (`u32`) being the rank space.
+/// This is modelled internally as a `(Rank, f32)`.
+/// The first element (`Rank`) being the rank space.
 /// The second element (`f32`) being the score space.
 /// The larger the score, the more relevant the document
 /// to the search
 #[derive(Debug, Default, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
-pub struct Score(pub u32, pub f32);
+pub struct Score(pub Rank, pub f32);
 
 impl Score {
     fn new<E: Into<Score>>(el: E) -> Score {
@@ -272,8 +275,8 @@ impl From<f32> for Score {
     }
 }
 
-impl From<(u32, f32)> for Score {
-    fn from(score: (u32, f32)) -> Score {
+impl From<(Rank, f32)> for Score {
+    fn from(score: (Rank, f32)) -> Score {
         Score(score.0, score.1)
     }
 }

@@ -7,7 +7,9 @@ use combine::parser::Parser;
 
 pub use crate::occur::Occur;
 use crate::query_grammar::parse_to_ast;
-pub use crate::user_input_ast::{UserInputAST, UserInputBound, UserInputLeaf, UserInputLiteral};
+pub use crate::user_input_ast::{
+    UserInputAST, UserInputBound, UserInputField, UserInputLeaf, UserInputLiteral,
+};
 
 pub struct Error;
 

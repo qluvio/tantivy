@@ -2,15 +2,17 @@ use crate::query::Occur;
 use crate::schema::Field;
 use crate::schema::Term;
 use crate::schema::Type;
+use crate::Rank;
 use std::fmt;
 use std::ops::Bound;
 
 #[derive(Clone)]
 pub enum LogicalLiteral {
-    Term(Term),
+    Term(Term, Rank),
     Phrase(Vec<(usize, Term)>),
     Range {
         field: Field,
+        rank: Rank,
         value_type: Type,
         lower: Bound<Term>,
         upper: Bound<Term>,
@@ -61,7 +63,7 @@ impl From<LogicalLiteral> for LogicalAST {
 impl fmt::Debug for LogicalLiteral {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match *self {
-            LogicalLiteral::Term(ref term) => write!(formatter, "{:?}", term),
+            LogicalLiteral::Term(ref term, ref rank) => write!(formatter, "{:?}#{:?}", term, rank),
             LogicalLiteral::Phrase(ref terms) => write!(formatter, "\"{:?}\"", terms),
             LogicalLiteral::Range {
                 ref lower,

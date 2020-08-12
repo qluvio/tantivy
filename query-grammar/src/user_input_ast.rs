@@ -4,11 +4,23 @@ use std::fmt::{Debug, Formatter};
 use crate::Occur;
 
 #[derive(PartialEq)]
+pub struct UserInputField {
+    pub name: String,
+    pub rank: u32,
+}
+
+impl Debug for UserInputField {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(formatter, "{}#{}", self.name, self.rank)
+    }
+}
+
+#[derive(PartialEq)]
 pub enum UserInputLeaf {
     Literal(UserInputLiteral),
     All,
     Range {
-        field: Option<String>,
+        field: Option<UserInputField>,
         lower: UserInputBound,
         upper: UserInputBound,
     },
@@ -24,7 +36,7 @@ impl Debug for UserInputLeaf {
                 ref upper,
             } => {
                 if let Some(ref field) = field {
-                    write!(formatter, "{}:", field)?;
+                    write!(formatter, "{:?}:", field)?;
                 }
                 lower.display_lower(formatter)?;
                 write!(formatter, " TO ")?;
@@ -38,14 +50,14 @@ impl Debug for UserInputLeaf {
 
 #[derive(PartialEq)]
 pub struct UserInputLiteral {
-    pub field_name: Option<String>,
+    pub field: Option<UserInputField>,
     pub phrase: String,
 }
 
 impl fmt::Debug for UserInputLiteral {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        match self.field_name {
-            Some(ref field_name) => write!(formatter, "{}:\"{}\"", field_name, self.phrase),
+        match self.field {
+            Some(ref field) => write!(formatter, "{}:\"{}\"", field.name, self.phrase),
             None => write!(formatter, "\"{}\"", self.phrase),
         }
     }

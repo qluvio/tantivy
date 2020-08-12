@@ -4,14 +4,27 @@ use combine::char::*;
 use combine::error::StreamError;
 use combine::stream::StreamErrorFor;
 use combine::*;
+use std::str;
 
 parser! {
-    fn field[I]()(I) -> String
+    fn field_name[I]()(I) -> UserInputField
     where [I: Stream<Item = char>] {
-        (
-            letter(),
-            many(satisfy(|c: char| c.is_alphanumeric() || c == '_')),
-        ).skip(char(':')).map(|(s1, s2): (char, String)| format!("{}{}", s1, s2))
+        (letter(), many(satisfy(|c: char| c.is_alphanumeric() || c == '_'))).map(|(s1, s2): (char, String)| UserInputField { name: format!("{}{}", s1, s2), rank:0 })
+    }
+}
+
+parser! {
+    fn field[I]()(I) -> UserInputField
+    where [I: Stream<Item = char>] {
+        let field_name_with_rank = (field_name().skip(char('#')), many1(digit())).and_then(|(field, rank_string): (UserInputField, String)| {
+            let rank = rank_string.parse::<u32>();
+            match rank {
+                Ok(rank_result) => Ok(UserInputField { name: field.name, rank: rank_result }),
+                Err(_) => Err(StreamErrorFor::<I>::unexpected_static_message("invalid parsing of rank score")),
+            }
+        });
+        attempt(field_name_with_rank)
+        .or(field_name()).skip(char(':'))
     }
 }
 
@@ -44,12 +57,12 @@ parser! {
         let term_val_with_field = negative_number().or(term_val());
         let term_query =
             (field(), term_val_with_field)
-            .map(|(field_name, phrase)| UserInputLiteral {
-                field_name: Some(field_name),
+            .map(|(field, phrase)| UserInputLiteral {
+                field: Some(field),
                 phrase,
             });
         let term_default_field = term_val().map(|phrase| UserInputLiteral {
-            field_name: None,
+            field: None,
             phrase,
         });
         attempt(term_query)

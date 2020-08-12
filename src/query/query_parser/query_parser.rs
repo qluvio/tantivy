@@ -13,12 +13,13 @@ use crate::schema::IndexRecordOption;
 use crate::schema::{Field, Schema};
 use crate::schema::{FieldType, Term};
 use crate::tokenizer::TokenizerManager;
+use crate::Rank;
 use crate::Score;
 use std::borrow::Cow;
 use std::num::{ParseFloatError, ParseIntError};
 use std::ops::Bound;
 use std::str::FromStr;
-use tantivy_query_grammar::{UserInputAST, UserInputBound, UserInputLeaf};
+use tantivy_query_grammar::{UserInputAST, UserInputBound, UserInputField, UserInputLeaf};
 
 /// Possible error that may happen when parsing a query.
 #[derive(Debug, PartialEq, Eq, Fail)]
@@ -332,12 +333,13 @@ impl QueryParser {
     fn compute_logical_ast_for_leaf(
         &self,
         field: Field,
+        rank: Rank,
         phrase: &str,
     ) -> Result<Option<LogicalLiteral>, QueryParserError> {
         let terms = self.compute_terms_for_string(field, phrase)?;
         match &terms[..] {
             [] => Ok(None),
-            [(_, term)] => Ok(Some(LogicalLiteral::Term(term.clone()))),
+            [(_, term)] => Ok(Some(LogicalLiteral::Term(term.clone(), rank))),
             _ => Ok(Some(LogicalLiteral::Phrase(terms.clone()))),
         }
     }
@@ -372,7 +374,7 @@ impl QueryParser {
 
     fn resolved_fields(
         &self,
-        given_field: &Option<String>,
+        given_field: &Option<UserInputField>,
     ) -> Result<Cow<'_, [Field]>, QueryParserError> {
         match *given_field {
             None => {
@@ -382,7 +384,7 @@ impl QueryParser {
                     Ok(Cow::from(&self.default_fields[..]))
                 }
             }
-            Some(ref field) => Ok(Cow::from(vec![self.resolve_field_name(&*field)?])),
+            Some(ref field) => Ok(Cow::from(vec![self.resolve_field_name(&*field.name)?])),
         }
     }
 
@@ -419,10 +421,10 @@ impl QueryParser {
     ) -> Result<LogicalAST, QueryParserError> {
         match leaf {
             UserInputLeaf::Literal(literal) => {
-                let term_phrases: Vec<(Field, String)> = match literal.field_name {
-                    Some(ref field_name) => {
-                        let field = self.resolve_field_name(field_name)?;
-                        vec![(field, literal.phrase.clone())]
+                let term_phrases: Vec<(Field, Rank, String)> = match literal.field {
+                    Some(ref literal_field) => {
+                        let field = self.resolve_field_name(literal_field.name.as_str())?;
+                        vec![(field, literal_field.rank, literal.phrase.clone())]
                     }
                     None => {
                         if self.default_fields.is_empty() {
@@ -430,14 +432,14 @@ impl QueryParser {
                         } else {
                             self.default_fields
                                 .iter()
-                                .map(|default_field| (*default_field, literal.phrase.clone()))
-                                .collect::<Vec<(Field, String)>>()
+                                .map(|default_field| (*default_field, 0, literal.phrase.clone()))
+                                .collect::<Vec<(Field, Rank, String)>>()
                         }
                     }
                 };
                 let mut asts: Vec<LogicalAST> = Vec::new();
-                for (field, phrase) in term_phrases {
-                    if let Some(ast) = self.compute_logical_ast_for_leaf(field, &phrase)? {
+                for (field, rank, phrase) in term_phrases {
+                    if let Some(ast) = self.compute_logical_ast_for_leaf(field, rank, &phrase)? {
                         asts.push(LogicalAST::Leaf(Box::new(ast)));
                     }
                 }
@@ -455,6 +457,10 @@ impl QueryParser {
                 upper,
             } => {
                 let fields = self.resolved_fields(&field)?;
+                let rank = match field {
+                    Some(f) => f.rank,
+                    None => 0,
+                };
                 let mut clauses = fields
                     .iter()
                     .map(|&field| {
@@ -462,6 +468,7 @@ impl QueryParser {
                         let value_type = field_entry.field_type().value_type();
                         Ok(LogicalAST::Leaf(Box::new(LogicalLiteral::Range {
                             field,
+                            rank,
                             value_type,
                             lower: self.resolve_bound(field, &lower)?,
                             upper: self.resolve_bound(field, &upper)?,
@@ -486,20 +493,22 @@ impl QueryParser {
 
 fn convert_literal_to_query(logical_literal: LogicalLiteral) -> Box<dyn Query> {
     match logical_literal {
-        LogicalLiteral::Term(term) => Box::new(WeightedQuery::new(
+        LogicalLiteral::Term(term, rank) => Box::new(WeightedQuery::new(
             TermQuery::new(term, IndexRecordOption::WithFreqs),
-            Score::new((0, 0.)),
+            Score::new((rank, 0.)),
         )),
         LogicalLiteral::Phrase(term_with_offsets) => {
             Box::new(PhraseQuery::new_with_offset(term_with_offsets))
         }
         LogicalLiteral::Range {
             field,
+            rank,
             value_type,
             lower,
             upper,
-        } => Box::new(RangeQuery::new_term_bounds(
-            field, value_type, &lower, &upper,
+        } => Box::new(WeightedQuery::new(
+            RangeQuery::new_term_bounds(field, value_type, &lower, &upper),
+            Score::new((rank, 0.)),
         )),
         LogicalLiteral::All => Box::new(AllQuery),
     }
