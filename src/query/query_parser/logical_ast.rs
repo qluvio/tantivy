@@ -65,7 +65,7 @@ impl fmt::Debug for LogicalLiteral {
         match *self {
             LogicalLiteral::Term(ref term, ref rank) => {
                 if *rank > 0 {
-                    write!(formatter, "({:?}, {:?})", term, rank)
+                    write!(formatter, "WeightedQuery({:?}, {:?})", term, rank)
                 } else {
                     write!(formatter, "{:?}", term)
                 }
