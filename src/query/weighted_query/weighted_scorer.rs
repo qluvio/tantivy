@@ -17,7 +17,6 @@ impl<S: DocSet + Scorer> WeightedScorer<S> {
     }
 }
 
-
 impl<S: DocSet + Scorer> DocSet for WeightedScorer<S> {
     fn advance(&mut self) -> bool {
         self.scorer.advance()

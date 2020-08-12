@@ -9,6 +9,53 @@ use std::clone::Clone;
 use std::collections::BTreeSet;
 use std::fmt;
 
+/// A Weighted query is a query that wraps an underlying query
+/// with a Score for that query
+///
+/// The Score associated contains two elements :
+/// * `rank`       - positive interger to affect the final scoring order (high priority)
+/// * `score`      - search engine score coming from the underlying query (low priority)
+///
+/// The Score returned by a WeightedQuery is equal to the Score returned by
+/// the underlying query, plus the constant WeightedQuery Score
+///
+/// ```rust
+/// use tantivy::collector::{Count, TopDocs};
+/// use tantivy::query::{TermQuery, WeightedQuery};
+/// use tantivy::schema::{Schema, TEXT, IndexRecordOption};
+/// use tantivy::{doc, Index, Term};
+/// # fn test() -> tantivy::Result<()> {
+/// let mut schema_builder = Schema::builder();
+/// let title = schema_builder.add_text_field("title", TEXT);
+/// let schema = schema_builder.build();
+/// let index = Index::create_in_ram(schema);
+/// {
+///     let mut index_writer = index.writer(3_000_000)?;
+///     index_writer.add_document(doc!(
+///         title => "The Name of the Wind",
+///     ));
+///     index_writer.add_document(doc!(
+///         title => "The Diary of Muadib",
+///     ));
+///     index_writer.add_document(doc!(
+///         title => "A Dairy Cow",
+///     ));
+///     index_writer.add_document(doc!(
+///         title => "The Diary of a Young Girl",
+///     ));
+///     index_writer.commit()?;
+/// }
+/// let reader = index.reader()?;
+/// let searcher = reader.searcher();
+/// let query = TermQuery::new(
+///     Term::from_field_text(title, "diary"),
+///     IndexRecordOption::Basic,
+/// );
+/// let weighted_query = WeightedQuery::new(query, Score::new((1, 2.)));
+/// let (top_docs, count) = searcher.search(&weighted_query, &(TopDocs::with_limit(2), Count))?;
+/// assert_eq!(count, 2);
+/// Ok(())
+/// ```
 #[derive(Clone)]
 pub struct WeightedQuery<Q: Query> {
     query: Q,
