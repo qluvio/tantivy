@@ -135,42 +135,42 @@ mod tests {
         {
             assert!(reqoptscorer.advance());
             assert_eq!(reqoptscorer.doc(), 1);
-            assert_eq!(reqoptscorer.score(), 2f32);
+            assert_eq!(reqoptscorer.score(), 2f32.into());
         }
         {
             assert!(reqoptscorer.advance());
             assert_eq!(reqoptscorer.doc(), 3);
-            assert_eq!(reqoptscorer.score(), 1f32);
+            assert_eq!(reqoptscorer.score(), 1f32.into());
         }
         {
             assert!(reqoptscorer.advance());
             assert_eq!(reqoptscorer.doc(), 7);
-            assert_eq!(reqoptscorer.score(), 2f32);
+            assert_eq!(reqoptscorer.score(), 2f32.into());
         }
         {
             assert!(reqoptscorer.advance());
             assert_eq!(reqoptscorer.doc(), 8);
-            assert_eq!(reqoptscorer.score(), 1f32);
+            assert_eq!(reqoptscorer.score(), 1f32.into());
         }
         {
             assert!(reqoptscorer.advance());
             assert_eq!(reqoptscorer.doc(), 9);
-            assert_eq!(reqoptscorer.score(), 1f32);
+            assert_eq!(reqoptscorer.score(), 1f32.into());
         }
         {
             assert!(reqoptscorer.advance());
             assert_eq!(reqoptscorer.doc(), 10);
-            assert_eq!(reqoptscorer.score(), 1f32);
+            assert_eq!(reqoptscorer.score(), 1f32.into());
         }
         {
             assert!(reqoptscorer.advance());
             assert_eq!(reqoptscorer.doc(), 13);
-            assert_eq!(reqoptscorer.score(), 1f32);
+            assert_eq!(reqoptscorer.score(), 1f32.into());
         }
         {
             assert!(reqoptscorer.advance());
             assert_eq!(reqoptscorer.doc(), 15);
-            assert_eq!(reqoptscorer.score(), 2f32);
+            assert_eq!(reqoptscorer.score(), 2f32.into());
         }
         assert!(!reqoptscorer.advance());
     }

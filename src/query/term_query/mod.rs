@@ -42,7 +42,7 @@ mod tests {
         let mut term_scorer = term_weight.scorer(segment_reader).unwrap();
         assert!(term_scorer.advance());
         assert_eq!(term_scorer.doc(), 0);
-        assert_eq!(term_scorer.score(), 0.28768212);
+        assert_eq!(term_scorer.score(), 0.28768212.into());
     }
 
     #[test]
@@ -72,7 +72,7 @@ mod tests {
                 .unwrap();
             assert_eq!(topdocs.len(), 1);
             let (score, _) = topdocs[0];
-            assert_nearly_equals(0.77802235, score);
+            assert_nearly_equals(0.77802235, score.1);
         }
         {
             let term = Term::from_field_text(left_field, "left1");
@@ -82,9 +82,9 @@ mod tests {
                 .unwrap();
             assert_eq!(top_docs.len(), 2);
             let (score1, _) = top_docs[0];
-            assert_nearly_equals(0.27101856, score1);
+            assert_nearly_equals(0.27101856, score1.1);
             let (score2, _) = top_docs[1];
-            assert_nearly_equals(0.13736556, score2);
+            assert_nearly_equals(0.13736556, score2.1);
         }
         {
             let query_parser = QueryParser::for_index(&index, vec![]);
@@ -92,9 +92,9 @@ mod tests {
             let top_docs = searcher.search(&query, &TopDocs::with_limit(2)).unwrap();
             assert_eq!(top_docs.len(), 2);
             let (score1, _) = top_docs[0];
-            assert_nearly_equals(0.9153879, score1);
+            assert_nearly_equals(0.9153879, score1.1);
             let (score2, _) = top_docs[1];
-            assert_nearly_equals(0.27101856, score2);
+            assert_nearly_equals(0.27101856, score2.1);
         }
     }
 

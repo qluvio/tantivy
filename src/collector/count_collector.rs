@@ -79,6 +79,7 @@ mod tests {
     use super::{Count, SegmentCountCollector};
     use crate::collector::Collector;
     use crate::collector::SegmentCollector;
+    use crate::Score;
 
     #[test]
     fn test_count_collect_does_not_requires_scoring() {
@@ -93,18 +94,18 @@ mod tests {
         }
         {
             let mut count_collector = SegmentCountCollector::default();
-            count_collector.collect(0u32, 1f32);
+            count_collector.collect(0u32, Score::new(1f32));
             assert_eq!(count_collector.harvest(), 1);
         }
         {
             let mut count_collector = SegmentCountCollector::default();
-            count_collector.collect(0u32, 1f32);
+            count_collector.collect(0u32, Score::new(1f32));
             assert_eq!(count_collector.harvest(), 1);
         }
         {
             let mut count_collector = SegmentCountCollector::default();
-            count_collector.collect(0u32, 1f32);
-            count_collector.collect(1u32, 1f32);
+            count_collector.collect(0u32, Score::new(1f32));
+            count_collector.collect(1u32, Score::new(1f32));
             assert_eq!(count_collector.harvest(), 2);
         }
     }

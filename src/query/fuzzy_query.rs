@@ -161,7 +161,7 @@ mod test {
                 .unwrap();
             assert_eq!(top_docs.len(), 1, "Expected only 1 document");
             let (score, _) = top_docs[0];
-            assert_nearly_equals(1f32, score);
+            assert_nearly_equals(1f32, score.1);
         }
     }
 }

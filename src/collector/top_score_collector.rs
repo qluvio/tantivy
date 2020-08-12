@@ -456,9 +456,9 @@ mod tests {
         assert_eq!(
             score_docs,
             vec![
-                (0.81221175, DocAddress(0u32, 1)),
-                (0.5376842, DocAddress(0u32, 2)),
-                (0.48527452, DocAddress(0, 0))
+                (0.81221175.into(), DocAddress(0u32, 1)),
+                (0.5376842.into(), DocAddress(0u32, 2)),
+                (0.48527452.into(), DocAddress(0, 0))
             ]
         );
     }
@@ -478,8 +478,8 @@ mod tests {
         assert_eq!(
             score_docs,
             vec![
-                (0.81221175, DocAddress(0u32, 1)),
-                (0.5376842, DocAddress(0u32, 2)),
+                (0.81221175.into(), DocAddress(0u32, 1)),
+                (0.5376842.into(), DocAddress(0u32, 2)),
             ]
         );
     }

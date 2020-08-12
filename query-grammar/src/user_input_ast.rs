@@ -11,7 +11,11 @@ pub struct UserInputField {
 
 impl Debug for UserInputField {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(formatter, "{}#{}", self.name, self.rank)
+        if self.rank > 0 {
+            write!(formatter, "{}#{}", self.name, self.rank)
+        } else {
+            write!(formatter, "{}", self.name)
+        }
     }
 }
 

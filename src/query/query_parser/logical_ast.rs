@@ -63,7 +63,13 @@ impl From<LogicalLiteral> for LogicalAST {
 impl fmt::Debug for LogicalLiteral {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match *self {
-            LogicalLiteral::Term(ref term, ref rank) => write!(formatter, "{:?}#{:?}", term, rank),
+            LogicalLiteral::Term(ref term, ref rank) => {
+                if *rank > 0 {
+                    write!(formatter, "({:?}, {:?})", term, rank)
+                } else {
+                    write!(formatter, "{:?}", term)
+                }
+            }
             LogicalLiteral::Phrase(ref terms) => write!(formatter, "\"{:?}\"", terms),
             LogicalLiteral::Range {
                 ref lower,

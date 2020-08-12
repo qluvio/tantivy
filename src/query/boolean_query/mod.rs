@@ -9,7 +9,7 @@ mod tests {
     use super::*;
     use crate::collector::tests::TEST_COLLECTOR_WITH_SCORE;
     use crate::query::score_combiner::SumWithCoordsCombiner;
-    use crate::query::term_query::TermScorer;
+    use crate::query::weighted_query::WeightedScorer;
     use crate::query::Intersection;
     use crate::query::Occur;
     use crate::query::Query;
@@ -71,7 +71,7 @@ mod tests {
         let searcher = index.reader().unwrap().searcher();
         let weight = query.weight(&searcher, true).unwrap();
         let scorer = weight.scorer(searcher.segment_reader(0u32)).unwrap();
-        assert!(scorer.is::<TermScorer>());
+        assert!(scorer.is::<WeightedScorer<Box<dyn Scorer>>>());
     }
 
     #[test]
@@ -83,7 +83,7 @@ mod tests {
             let query = query_parser.parse_query("+a +b +c").unwrap();
             let weight = query.weight(&searcher, true).unwrap();
             let scorer = weight.scorer(searcher.segment_reader(0u32)).unwrap();
-            assert!(scorer.is::<Intersection<TermScorer>>());
+            assert!(scorer.is::<Intersection<Box<dyn Scorer>>>());
         }
         {
             let query = query_parser.parse_query("+a +(b c)").unwrap();
@@ -112,7 +112,7 @@ mod tests {
             let query = query_parser.parse_query("+a b").unwrap();
             let weight = query.weight(&searcher, false).unwrap();
             let scorer = weight.scorer(searcher.segment_reader(0u32)).unwrap();
-            assert!(scorer.is::<TermScorer>());
+            assert!(scorer.is::<WeightedScorer<Box<dyn Scorer>>>());
         }
     }
 
@@ -205,7 +205,10 @@ mod tests {
                 (Occur::Must, make_term_query("a")),
                 (Occur::Must, make_term_query("b")),
             ]);
-            assert_eq!(score_docs(&boolean_query), vec![0.977973, 0.84699446]);
+            assert_eq!(
+                score_docs(&boolean_query),
+                vec![0.977973.into(), 0.84699446.into()]
+            );
         }
     }
 
