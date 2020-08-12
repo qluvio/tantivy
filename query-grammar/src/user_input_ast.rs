@@ -61,7 +61,7 @@ pub struct UserInputLiteral {
 impl fmt::Debug for UserInputLiteral {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self.field {
-            Some(ref field) => write!(formatter, "{}:\"{}\"", field.name, self.phrase),
+            Some(ref field) => write!(formatter, "{:?}:\"{}\"", field, self.phrase),
             None => write!(formatter, "\"{}\"", self.phrase),
         }
     }

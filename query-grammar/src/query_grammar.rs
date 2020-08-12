@@ -310,6 +310,17 @@ mod test {
     }
 
     #[test]
+    fn test_parse_weighted_query() {
+        test_parse_query_to_ast_helper("title#1: >a", "title#1:{\"a\" TO \"*\"}");
+        test_parse_query_to_ast_helper("foo#2:[1.1 TO *}", "foo#2:[\"1.1\" TO \"*\"}");
+        test_parse_query_to_ast_helper("(+abc#3:toto -titi)", "(+(abc#3:\"toto\") -(\"titi\"))");
+        test_parse_query_to_ast_helper(
+            "((hell#4:no) OR (paradise:yes))",
+            "(?(hell#4:\"no\") ?(paradise:\"yes\"))",
+        );
+    }
+
+    #[test]
     fn test_parse_elastic_query_ranges() {
         test_parse_query_to_ast_helper("title: >a", "title:{\"a\" TO \"*\"}");
         test_parse_query_to_ast_helper("title:>=a", "title:[\"a\" TO \"*\"}");
@@ -333,7 +344,10 @@ mod test {
         // testing the range() parser separately
         let res = range().parse("title: <hello").unwrap().0;
         let expected = UserInputLeaf::Range {
-            field: Some("title".to_string()),
+            field: Some(UserInputField {
+                name: "title".to_string(),
+                rank: 0,
+            }),
             lower: UserInputBound::Unbounded,
             upper: UserInputBound::Exclusive("hello".to_string()),
         };
@@ -341,7 +355,10 @@ mod test {
         assert_eq!(res, expected);
         assert_eq!(res2, expected);
         let expected_weight = UserInputLeaf::Range {
-            field: Some("weight".to_string()),
+            field: Some(UserInputField {
+                name: "weight".to_string(),
+                rank: 0,
+            }),
             lower: UserInputBound::Inclusive("71.2".to_string()),
             upper: UserInputBound::Unbounded,
         };
